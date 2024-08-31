@@ -7,17 +7,9 @@ exports.submitMessage = async (req, res) => {
   try {
     const userData = await fetchUserData(childId);
 
-    if (!userData) {
-      return res.status(404).json({ error: 'Child not registered' });
-    }
-
-    if (userData.age >= 10) {
-      return res.status(400).json({ error: 'Child is too old' });
-    }
-
     const newMessage = new Message({
-      childId,
-      username: userData.username,
+      childId: userData.username,
+      username: userData.name,
       address: userData.address,
       message,
     });
@@ -26,6 +18,14 @@ exports.submitMessage = async (req, res) => {
 
     res.status(200).json({ message: 'Message received successfully' });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    if (
+      error.message === 'User not registered' ||
+      error.message === 'Child is 10 years or older'
+    ) {
+      res.status(400).json({ error: error.message });
+    } else {
+      console.error('Error in submitMessage:', error);
+      res.status(500).json({ error: 'An unexpected error occurred' });
+    }
   }
 };

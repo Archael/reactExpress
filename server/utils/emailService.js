@@ -1,11 +1,27 @@
 const nodemailer = require('nodemailer');
 const Message = require('../models/Message');
 
-const transporter = nodemailer.createTransport({
-  // Configure your email service here
-});
+let transporter;
+
+async function createTransporter() {
+  const testAccount = await nodemailer.createTestAccount();
+
+  return nodemailer.createTransport({
+    host: 'smtp.ethereal.email',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.ETHEREAL_USER || testAccount.user,
+      pass: process.env.ETHEREAL_PASS || testAccount.pass,
+    },
+  });
+}
 
 exports.sendPendingMessages = async () => {
+  if (!transporter) {
+    transporter = await createTransporter();
+  }
+
   const pendingMessages = await Message.findPendingMessages();
 
   if (pendingMessages.length === 0) {
@@ -27,9 +43,12 @@ exports.sendPendingMessages = async () => {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
     console.log('Email sent successfully');
-    // Update messages as sent in the database
+    console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+
+    // Mark messages as sent
+    await Message.markAsSent(pendingMessages.map((msg) => msg.childId));
   } catch (error) {
     console.error('Error sending email:', error);
   }

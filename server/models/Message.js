@@ -1,3 +1,5 @@
+let messages = [];
+
 class Message {
   constructor({ childId, username, address, message }) {
     this.childId = childId;
@@ -9,20 +11,17 @@ class Message {
   }
 
   async save() {
-    // In a real application, this would save to a database
-    console.log('Saving message:', this);
+    messages.push(this);
   }
 
   static async findPendingMessages() {
-    // In a real application, this would query the database
-    // For now, we'll return a mock pending message
-    return [
-      {
-        username: 'charlie.brown',
-        address: '219-1130, Ikanikeisaiganaibaai, Musashino-shi, Tokyo',
-        message: 'Dear Santa, I would like a new kite for Christmas.',
-      },
-    ];
+    return messages.filter((msg) => !msg.sent);
+  }
+
+  static async markAsSent(messageIds) {
+    messages = messages.map((msg) =>
+      messageIds.includes(msg.childId) ? { ...msg, sent: true } : msg
+    );
   }
 }
 

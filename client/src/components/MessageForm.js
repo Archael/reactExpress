@@ -8,13 +8,15 @@ function MessageForm({ setStatus, setErrorMessage }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:5000/api/submit-message', {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/submit-message`, {
         childId,
         message,
       });
       setStatus('success');
     } catch (error) {
-      setErrorMessage(error.response?.data?.error || 'An error occurred');
+      const errorMsg =
+        error.response?.data?.error || 'An unexpected error occurred';
+      setErrorMessage(errorMsg);
       setStatus('error');
     }
   };
@@ -26,7 +28,7 @@ function MessageForm({ setStatus, setErrorMessage }) {
           htmlFor="childId"
           className="block text-sm font-medium text-gray-700"
         >
-          Child ID
+          Child Username
         </label>
         <input
           type="text"
